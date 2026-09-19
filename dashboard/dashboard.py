@@ -1,12 +1,3 @@
-"""
-Dashboard Interaktif — Factors That Influence Career Success (SDG 4 & 8)
-Konversi dari eda_analysis_Group2.ipynb ke Streamlit.
-
-Cara menjalankan:
-    pip install -r requirements.txt
-    streamlit run dashboard.py
-"""
-
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -305,10 +296,6 @@ with tabs[0]:
         fig, _ = corr_heatmap(df, pick, method, "Correlation Matrix", height=560)
         st.plotly_chart(fig, **W)
 
-
-# ============================================================================
-# TAB 1 — SHIFTING RECRUITMENT TRENDS
-# ============================================================================
 with tabs[1]:
     st.subheader("1. Shifting Recruitment Trends")
 
@@ -374,9 +361,6 @@ with tabs[1]:
     )
 
 
-# ============================================================================
-# TAB 2 — CAREER WELL-BEING
-# ============================================================================
 with tabs[2]:
     st.subheader("2. Demands for Career Well-Being")
 
@@ -469,9 +453,6 @@ with tabs[2]:
     )
 
 
-# ============================================================================
-# TAB 3 — SKILLS GAP
-# ============================================================================
 with tabs[3]:
     st.subheader("3. Skills Gap")
 
@@ -548,9 +529,6 @@ with tabs[3]:
     )
 
 
-# ============================================================================
-# TAB 4 — GENDER PARITY
-# ============================================================================
 with tabs[4]:
     st.subheader("4. Gender Parity in Professional Outcomes")
 
@@ -623,10 +601,6 @@ with tabs[4]:
         "kelompok GPA tertinggi selisihnya nyaris hilang."
     )
 
-
-# ============================================================================
-# TAB 5 — UNEQUAL EARLY-CAREER OPPORTUNITIES
-# ============================================================================
 with tabs[5]:
     st.subheader("5. Unequal Early-Career Opportunities Among Graduates")
 
