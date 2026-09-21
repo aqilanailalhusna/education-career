@@ -39,9 +39,7 @@ def load_data(source) -> pd.DataFrame:
 
 @st.cache_data(show_spinner=False)
 def prepare(df: pd.DataFrame) -> pd.DataFrame:
-    """Replikasi tahap Data Cleaning + feature engineering dari notebook."""
     df = df.copy()
-
     df = df.drop(columns=[c for c in ["Student_ID", "Entrepreneurship"] if c in df.columns])
 
     for src, dst in [("Starting_Salary", "salary_scaled"),
@@ -68,7 +66,6 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def sample_data(n: int = 400, seed: int = 42) -> pd.DataFrame:
-    """Data sintetis agar dashboard tetap bisa dicoba tanpa file CSV asli."""
     rng = np.random.default_rng(seed)
     latent = rng.uniform(0, 1, n)
     noise = lambda s: rng.normal(0, s, n)
@@ -98,7 +95,6 @@ def sample_data(n: int = 400, seed: int = 42) -> pd.DataFrame:
 
 
 def regplot(df, x, y, title, line_color="#2ca02c", height=380):
-    """Pengganti interaktif untuk sns.regplot (scatter + garis regresi OLS)."""
     d = df[[x, y]].dropna()
     fig = px.scatter(d, x=x, y=y, opacity=0.55, height=height,
                      color_discrete_sequence=["#4C78A8"])
@@ -117,7 +113,6 @@ def regplot(df, x, y, title, line_color="#2ca02c", height=380):
 
 
 def corr_heatmap(df, cols, method="spearman", title="", fmt=".3f", zmin=None, zmax=None, height=420):
-    """Pengganti interaktif untuk sns.heatmap(df.corr(), annot=True)."""
     cols = [c for c in cols if c in df.columns]
     m = df[cols].corr(method).round(4)
     fig = px.imshow(m, text_auto=fmt, color_continuous_scale=CORR_SCALE,
@@ -139,24 +134,19 @@ def mean_bar(df, x, y, title, xlabel, ylabel, color_scale="Viridis", height=400)
 
 
 def narrative(text: str):
-    with st.expander("📝 Interpretasi / temuan", expanded=False):
+    with st.expander("Insight", expanded=False):
         st.markdown(text)
 
 
 st.sidebar.title("Career Success")
 st.sidebar.caption("Career Success Dashboard")
 
-st.sidebar.subheader("Sumber data")
-upload = st.sidebar.file_uploader("Upload education_career_success.csv", type=["csv"])
-
+# LANGSUNG MEMBACA DATA LOKAL TANPA UPLOADER
 raw, source_note = None, ""
-if upload is not None:
-    raw, source_note = load_data(upload), "File hasil upload"
-else:
-    try:
-        raw, source_note = load_data(DEFAULT_PATH), f"`{DEFAULT_PATH}` (folder lokal)"
-    except Exception:
-        raw, source_note = sample_data(), "⚠️ Data contoh (sintetis) — upload CSV asli untuk hasil sebenarnya"
+try:
+    raw, source_note = load_data(DEFAULT_PATH), f"`{DEFAULT_PATH}` (Folder Lokal)"
+except Exception:
+    raw, source_note = sample_data(), "⚠️ Data Contoh (Sintetis)"
 
 missing = [c for c in EXPECTED_COLS if c not in raw.columns]
 if missing:
@@ -196,11 +186,27 @@ if "Starting_Salary" in df_all:
 df = df_all[mask].copy()
 
 st.sidebar.markdown("---")
+
+st.sidebar.subheader("Navigation")
+selected_page = st.sidebar.selectbox(
+    "Pages:",
+    [
+        "Exploratory Data Analysis (EDA)",
+        "1. Recruitment Trends",
+        "2. Career Well-Being",
+        "3. Skills Gap",
+        "4. Gender Parity",
+        "5. Unequal Opportunities",
+        "6. Conclusion"
+    ]
+)
+
+st.sidebar.markdown("---")
 st.sidebar.metric("Baris terpakai", f"{len(df):,}", f"{len(df) - len(df_all):,} vs total")
 if st.sidebar.button("Reset filter"):
     st.rerun()
 st.sidebar.download_button("Unduh data terfilter",
-                           df.to_csv(index=False).encode(), "filtered_data.csv", "text/csv")
+                            df.to_csv(index=False).encode(), "filtered_data.csv", "text/csv")
 st.sidebar.caption(f"Sumber: {source_note}")
 
 if df.empty:
@@ -209,8 +215,6 @@ if df.empty:
 
 
 st.title("Factors That Influence Career Success")
-st.caption("SDG 4 (Quality Education) & SDG 8 (Decent Work and Economic Growth) — "
-           "versi interaktif dari notebook EDA Group 2")
 
 k = st.columns(5)
 k[0].metric("Jumlah mahasiswa", f"{len(df):,}")
@@ -223,80 +227,88 @@ if "Job_Offers" in df:
 if "Career_Satisfaction" in df:
     k[4].metric("Kepuasan karier", f"{df['Career_Satisfaction'].mean():.2f}/10")
 
-tabs = st.tabs([
-    "Data Understanding",
-    "Recruitment Trends",
-    "Career Well-Being",
-    "Skills Gap",
-    "Gender Parity",
-    "Unequal Opportunities",
-    "Conclusion",
-])
+st.markdown("---")
 
-with tabs[0]:
-    st.subheader("B. Data Understanding & C. Data Cleaning")
+
+if selected_page == "Exploratory Data Analysis (EDA)":
+    st.subheader("Exploratory Data Analysis (EDA)")
     st.markdown(
-        "Dataset berisi catatan mahasiswa yang menggabungkan metrik akademik "
-        "(GPA, SAT), pengalaman praktik (magang, proyek, sertifikasi), soft skill, "
-        "dan hasil karier awal (gaji, job offers, kepuasan, waktu promosi). "
-        "Kolom `Student_ID` dan `Entrepreneurship` dibuang karena tidak memberi insight."
+        "Halaman ini menampilkan gambaran pemetaan awal terhadap karakteristik akademik, "
+        "sebaran bidang studi, serta portofolio pengalaman mahasiswa (proyek, magang, sertifikasi)."
     )
 
-    c1, c2 = st.columns([2, 1])
-    with c1:
-        st.markdown("**Cuplikan data (setelah cleaning)**")
-        st.dataframe(df.head(20), **W)
-    with c2:
-        st.markdown("**Struktur kolom (`df.info()`)**")
-        info = pd.DataFrame({
-            "Tipe": df.dtypes.astype(str),
-            "Non-null": df.notna().sum(),
-            "Missing": df.isna().sum(),
-            "Unique": df.nunique(),
-        })
-        st.dataframe(info, **W, height=420)
+    st.markdown("### 1. Profil Academic & IPK Mahasiswa")
+    e1, e2 = st.columns(2)
+    with e1:
+        if "University_GPA" in df.columns:
+            fig_gpa = px.histogram(
+                df, x="University_GPA", nbins=20, marginal="box",
+                title="Sebaran IPK Mahasiswa (University GPA)",
+                color_discrete_sequence=["#2b5c8f"]
+            )
+            fig_gpa.add_vline(x=df["University_GPA"].mean(), line_dash="dash", line_color="red",
+                              annotation_text=f"Rata-rata: {df['University_GPA'].mean():.2f}")
+            st.plotly_chart(fig_gpa, **W)
 
-    st.markdown("**Statistik deskriptif (`df.describe()`)**")
+    with e2:
+        if "University_GPA" in df.columns and "Field_of_Study" in df.columns:
+            gpa_field = df.groupby("Field_of_Study")["University_GPA"].mean().reset_index()
+            fig_gpa_field = px.bar(
+                gpa_field, x="Field_of_Study", y="University_GPA",
+                title="Rata-rata IPK per Bidang Studi",
+                color="University_GPA", color_continuous_scale="Blues",
+                text=gpa_field["University_GPA"].round(2)
+            )
+            fig_gpa_field.update_traces(textposition="outside")
+            fig_gpa_field.update_yaxes(range=[0, 4.0])
+            st.plotly_chart(fig_gpa_field, **W)
+
+    st.markdown("### 2. Sebaran Bidang Studi (Field of Study)")
+    if "Field_of_Study" in df.columns:
+        f_counts = df["Field_of_Study"].value_counts().reset_index()
+        f_counts.columns = ["Field_of_Study", "Jumlah Mahasiswa"]
+        fig_field = px.pie(
+            f_counts, names="Field_of_Study", values="Jumlah Mahasiswa",
+            title="Komposisi Mahasiswa Berdasarkan Field of Study",
+            hole=0.4, color_discrete_sequence=px.colors.qualitative.Set3
+        )
+        st.plotly_chart(fig_field, **W)
+
+    st.markdown("### 3. Rentang Pengalaman & Portofolio Mahasiswa")
+    st.markdown("Pemetaan distribusi jumlah **Proyek**, **Magang (Internship)**, dan **Sertifikasi** yang diikuti oleh mahasiswa:")
+    
+    p1, p2, p3 = st.columns(3)
+    with p1:
+        if "Projects_Completed" in df.columns:
+            fig_proj = px.histogram(
+                df, x="Projects_Completed",
+                title="Rentang Proyek Selesai",
+                color_discrete_sequence=["#27ae60"], text_auto=True
+            )
+            st.plotly_chart(fig_proj, **W)
+    with p2:
+        if "Internships_Completed" in df.columns:
+            fig_intern = px.histogram(
+                df, x="Internships_Completed",
+                title="Rentang Magang Selesai",
+                color_discrete_sequence=["#e67e22"], text_auto=True
+            )
+            st.plotly_chart(fig_intern, **W)
+    with p3:
+        if "Certifications" in df.columns:
+            fig_cert = px.histogram(
+                df, x="Certifications",
+                title="Rentang Sertifikasi Selesai",
+                color_discrete_sequence=["#8e44ad"], text_auto=True
+            )
+            st.plotly_chart(fig_cert, **W)
+
+    st.markdown("---")
+    st.markdown("### 4. Ringkasan Matriks Data Terpakai")
     st.dataframe(df.describe().T.round(2), **W)
 
-    st.markdown("**Distribusi variabel**")
-    num_cols = df.select_dtypes("number").columns.tolist()
-    cat_cols = df.select_dtypes(exclude="number").columns.tolist()
-    d1, d2 = st.columns(2)
-    with d1:
-        col = st.selectbox("Variabel numerik", num_cols,
-                           index=num_cols.index("Starting_Salary") if "Starting_Salary" in num_cols else 0)
-        bins = st.slider("Jumlah bin", 5, 60, 25)
-        fig = px.histogram(df, x=col, nbins=bins, marginal="box",
-                           color_discrete_sequence=["#4C78A8"], height=420)
-        fig.update_layout(title=f"Distribusi {col}", margin=dict(t=55, b=10, l=10, r=10))
-        st.plotly_chart(fig, **W)
-    with d2:
-        if cat_cols:
-            ccol = st.selectbox("Variabel kategorik", cat_cols)
-            vc = df[ccol].value_counts().reset_index()
-            vc.columns = [ccol, "Jumlah"]
-            fig = px.bar(vc, x=ccol, y="Jumlah", color="Jumlah",
-                         color_continuous_scale="Viridis", text="Jumlah", height=420)
-            fig.update_layout(title=f"Komposisi {ccol}", coloraxis_showscale=False,
-                              margin=dict(t=55, b=10, l=10, r=10))
-            st.plotly_chart(fig, **W)
 
-    st.markdown("**Korelasi seluruh variabel numerik**")
-    base_cols = [c for c in num_cols if c not in
-                 ("salary_scaled", "worklife_scaled")]
-    pick = st.multiselect("Pilih kolom", base_cols,
-                          default=[c for c in ["University_GPA", "Soft_Skills_Score",
-                                               "Internships_Completed", "Projects_Completed",
-                                               "Certifications", "Job_Offers",
-                                               "Starting_Salary", "Career_Satisfaction"]
-                                   if c in base_cols])
-    method = st.radio("Metode korelasi", ["pearson", "spearman"], horizontal=True, index=1)
-    if len(pick) >= 2:
-        fig, _ = corr_heatmap(df, pick, method, "Correlation Matrix", height=560)
-        st.plotly_chart(fig, **W)
-
-with tabs[1]:
+elif selected_page == "1. Recruitment Trends":
     st.subheader("1. Shifting Recruitment Trends")
 
     st.markdown("#### a. Bagaimana pengaruh soft skills dibandingkan GPA terhadap peluang job offer?")
@@ -361,7 +373,7 @@ with tabs[1]:
     )
 
 
-with tabs[2]:
+elif selected_page == "2. Career Well-Being":
     st.subheader("2. Demands for Career Well-Being")
 
     st.markdown("#### a. Bagaimana gaji dan work-life balance bersama-sama memengaruhi kepuasan karier?")
@@ -453,7 +465,7 @@ with tabs[2]:
     )
 
 
-with tabs[3]:
+elif selected_page == "3. Skills Gap":
     st.subheader("3. Skills Gap")
 
     st.markdown("#### a. Dampak magang dan proyek terhadap job offers")
@@ -529,7 +541,7 @@ with tabs[3]:
     )
 
 
-with tabs[4]:
+elif selected_page == "4. Gender Parity":
     st.subheader("4. Gender Parity in Professional Outcomes")
 
     st.markdown("#### a. Perbedaan gaji awal & waktu promosi antar gender pada bidang studi yang sama")
@@ -601,7 +613,8 @@ with tabs[4]:
         "kelompok GPA tertinggi selisihnya nyaris hilang."
     )
 
-with tabs[5]:
+
+elif selected_page == "5. Unequal Opportunities":
     st.subheader("5. Unequal Early-Career Opportunities Among Graduates")
 
     st.markdown("#### a. GPA setara, pengalaman praktik berbeda — hasil kariernya berbeda?")
@@ -673,10 +686,7 @@ with tabs[5]:
     )
 
 
-# ============================================================================
-# TAB 6 — CONCLUSION
-# ============================================================================
-with tabs[6]:
+elif selected_page == "6. Conclusion":
     st.subheader("E. Conclusion")
     st.markdown(
         """
