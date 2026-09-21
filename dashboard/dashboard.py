@@ -20,7 +20,7 @@ W = {"width": "stretch"} if _v >= (1, 49) else {"use_container_width": True}
 PALETTE = px.colors.sequential.Viridis
 CORR_SCALE = "RdBu_r"
 
-DEFAULT_PATH = "cleaned_dataset_Group2.csv"
+DEFAULT_PATH = "../dataset/education_career_success_cleaned.csv"
 
 EXPECTED_COLS = [
     "Age", "Gender", "High_School_GPA", "SAT_Score",
@@ -141,18 +141,34 @@ def narrative(text: str):
 st.sidebar.title("Career Success")
 st.sidebar.caption("Career Success Dashboard")
 
-# LANGSUNG MEMBACA DATA LOKAL TANPA UPLOADER
-raw, source_note = None, ""
 try:
-    raw, source_note = load_data(DEFAULT_PATH), f"`{DEFAULT_PATH}` (Folder Lokal)"
-except Exception:
-    raw, source_note = sample_data(), "⚠️ Data Contoh (Sintetis)"
+    raw = load_data(DEFAULT_PATH)
+    source_note = f"`{DEFAULT_PATH}` (Folder Lokal)"
+except Exception as e:
+    st.error(f"❌ File `{DEFAULT_PATH}` tidak ditemukan di folder lokal. Pastikan file CSV berada di direktori yang sama dengan script.")
+    st.stop()
 
 missing = [c for c in EXPECTED_COLS if c not in raw.columns]
 if missing:
     st.sidebar.warning("Kolom tidak ditemukan: " + ", ".join(missing))
 
 df_all = prepare(raw)
+
+st.sidebar.subheader("Navigation")
+selected_page = st.sidebar.selectbox(
+    "Pages:",
+    [
+        "Exploratory Data Analysis (EDA)",
+        "1. Recruitment Trends",
+        "2. Career Well-Being",
+        "3. Skills Gap",
+        "4. Gender Parity",
+        "5. Unequal Opportunities",
+        "6. Conclusion"
+    ]
+)
+
+st.markdown("---")
 
 st.sidebar.subheader("Filter global")
 
@@ -185,48 +201,19 @@ if "Starting_Salary" in df_all:
 
 df = df_all[mask].copy()
 
-st.sidebar.markdown("---")
-
-st.sidebar.subheader("Navigation")
-selected_page = st.sidebar.selectbox(
-    "Pages:",
-    [
-        "Exploratory Data Analysis (EDA)",
-        "1. Recruitment Trends",
-        "2. Career Well-Being",
-        "3. Skills Gap",
-        "4. Gender Parity",
-        "5. Unequal Opportunities",
-        "6. Conclusion"
-    ]
-)
-
-st.sidebar.markdown("---")
-st.sidebar.metric("Baris terpakai", f"{len(df):,}", f"{len(df) - len(df_all):,} vs total")
-if st.sidebar.button("Reset filter"):
-    st.rerun()
-st.sidebar.download_button("Unduh data terfilter",
-                            df.to_csv(index=False).encode(), "filtered_data.csv", "text/csv")
-st.sidebar.caption(f"Sumber: {source_note}")
+# st.sidebar.markdown("---")
+# st.sidebar.metric("Baris terpakai", f"{len(df):,}", f"{len(df) - len(df_all):,} vs total")
+# if st.sidebar.button("Reset filter"):
+#     st.rerun()
+# st.sidebar.download_button("Unduh data terfilter",
+#                             df.to_csv(index=False).encode(), "filtered_data.csv", "text/csv")
+# st.sidebar.caption(f"Sumber: {source_note}")
 
 if df.empty:
     st.error("Tidak ada data yang lolos filter. Longgarkan filter di sidebar.")
     st.stop()
 
-
 st.title("Factors That Influence Career Success")
-
-k = st.columns(5)
-k[0].metric("Jumlah mahasiswa", f"{len(df):,}")
-if "University_GPA" in df:
-    k[1].metric("Rata-rata GPA", f"{df['University_GPA'].mean():.2f}")
-if "Starting_Salary" in df:
-    k[2].metric("Rata-rata gaji awal", f"${df['Starting_Salary'].mean():,.0f}")
-if "Job_Offers" in df:
-    k[3].metric("Rata-rata job offers", f"{df['Job_Offers'].mean():.2f}")
-if "Career_Satisfaction" in df:
-    k[4].metric("Kepuasan karier", f"{df['Career_Satisfaction'].mean():.2f}/10")
-
 st.markdown("---")
 
 
@@ -236,6 +223,17 @@ if selected_page == "Exploratory Data Analysis (EDA)":
         "Halaman ini menampilkan gambaran pemetaan awal terhadap karakteristik akademik, "
         "sebaran bidang studi, serta portofolio pengalaman mahasiswa (proyek, magang, sertifikasi)."
     )
+
+    k = st.columns(5)
+    k[0].metric("Jumlah mahasiswa", f"{len(df):,}")
+    if "University_GPA" in df:
+        k[1].metric("Rata-rata GPA", f"{df['University_GPA'].mean():.2f}")
+    if "Starting_Salary" in df:
+        k[2].metric("Rata-rata gaji awal", f"${df['Starting_Salary'].mean():,.0f}")
+    if "Job_Offers" in df:
+        k[3].metric("Rata-rata job offers", f"{df['Job_Offers'].mean():.2f}")
+    if "Career_Satisfaction" in df:
+        k[4].metric("Kepuasan karier", f"{df['Career_Satisfaction'].mean():.2f}/10")
 
     st.markdown("### 1. Profil Academic & IPK Mahasiswa")
     e1, e2 = st.columns(2)
@@ -302,11 +300,6 @@ if selected_page == "Exploratory Data Analysis (EDA)":
                 color_discrete_sequence=["#8e44ad"], text_auto=True
             )
             st.plotly_chart(fig_cert, **W)
-
-    st.markdown("---")
-    st.markdown("### 4. Ringkasan Matriks Data Terpakai")
-    st.dataframe(df.describe().T.round(2), **W)
-
 
 elif selected_page == "1. Recruitment Trends":
     st.subheader("1. Shifting Recruitment Trends")
