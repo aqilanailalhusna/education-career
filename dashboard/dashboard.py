@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import joblib
+import os
 
 st.set_page_config(
     page_title="Career Success Dashboard",
@@ -22,7 +23,41 @@ PALETTE = px.colors.sequential.Viridis
 CORR_SCALE = "RdBu_r"
 
 DEFAULT_PATH = "../dataset/education_career_success_cleaned.csv"
-MODEL_PATH = "model_career_prediction.pkl"
+
+DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(DASHBOARD_DIR)
+MODEL_PATH = os.path.join(BASE_DIR, "model_career_prediction.pkl")
+
+
+@st.cache_resource(show_spinner=False)
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(
+            f"File model tidak ditemukan pada lokasi: {MODEL_PATH}"
+        )
+
+    bundle = joblib.load(MODEL_PATH)
+
+    if not isinstance(bundle, dict):
+        raise TypeError(
+            f"File .pkl terdeteksi sebagai {type(bundle).__name__}, bukan dictionary."
+        )
+
+    model = (
+        bundle.get("model")
+        or bundle.get("pipeline")
+        or bundle.get("best_model")
+    )
+
+    if model is None:
+        raise KeyError(
+            f"Key 'model' tidak ditemukan/bernilai None! Key yang tersedia di .pkl Anda: {list(bundle.keys())}"
+        )
+
+    categories = bundle.get("categories", {})
+    features = bundle.get("features", [])
+
+    return model, categories, features
 
 EXPECTED_COLS = [
     "Age", "Gender", "High_School_GPA", "SAT_Score",
@@ -207,14 +242,6 @@ if "Starting_Salary" in df_all:
     mask &= df_all["Starting_Salary"].between(*sal)
 
 df = df_all[mask].copy()
-
-# st.sidebar.markdown("---")
-# st.sidebar.metric("Baris terpakai", f"{len(df):,}", f"{len(df) - len(df_all):,} vs total")
-# if st.sidebar.button("Reset filter"):
-#     st.rerun()
-# st.sidebar.download_button("Unduh data terfilter",
-#                             df.to_csv(index=False).encode(), "filtered_data.csv", "text/csv")
-# st.sidebar.caption(f"Sumber: {source_note}")
 
 if df.empty:
     st.error("Tidak ada data yang lolos filter. Longgarkan filter di sidebar.")
@@ -729,9 +756,10 @@ elif selected_page == "7. Prediksi Job Offers":
  
     try:
         model, categories, features = load_model()
-    except Exception:
+    except Exception as e:
         st.error(
-            f"❌ File model `{MODEL_PATH}` tidak ditemukan)."
+            f"❌ **Gagal memuat model:** File model `{MODEL_PATH}` tidak ditemukan "
+            f"atau terjadi kesalahan pembacaan.\n\nDetail error: `{e}`"
         )
         st.stop()
  
@@ -756,7 +784,7 @@ elif selected_page == "7. Prediksi Job Offers":
                 "Starting Salary (ekspektasi)", min_value=0, max_value=1_000_000, value=60000, step=1000
             )
  
-        q_submitted = st.form_submit_button("🔮 Prediksi")
+        q_submitted = st.form_submit_button("Prediksi")
  
     if q_submitted:
         input_df = pd.DataFrame([{
