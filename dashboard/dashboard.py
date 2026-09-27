@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import joblib
 
 st.set_page_config(
     page_title="Career Success Dashboard",
@@ -21,6 +22,7 @@ PALETTE = px.colors.sequential.Viridis
 CORR_SCALE = "RdBu_r"
 
 DEFAULT_PATH = "../dataset/education_career_success_cleaned.csv"
+MODEL_PATH = "model_career_prediction.pkl"
 
 EXPECTED_COLS = [
     "Age", "Gender", "High_School_GPA", "SAT_Score",
@@ -36,6 +38,10 @@ def load_data(source) -> pd.DataFrame:
     df = pd.read_csv(source)
     return df
 
+@st.cache_resource(show_spinner=False)
+def load_model():
+    bundle = joblib.load(MODEL_PATH)
+    return bundle["model"], bundle["categories"], bundle["features"]
 
 @st.cache_data(show_spinner=False)
 def prepare(df: pd.DataFrame) -> pd.DataFrame:
@@ -145,7 +151,7 @@ try:
     raw = load_data(DEFAULT_PATH)
     source_note = f"`{DEFAULT_PATH}` (Folder Lokal)"
 except Exception as e:
-    st.error(f"❌ File `{DEFAULT_PATH}` tidak ditemukan di folder lokal. Pastikan file CSV berada di direktori yang sama dengan script.")
+    st.error(f"File `{DEFAULT_PATH}` tidak ditemukan di folder lokal. Pastikan file CSV berada di direktori yang sama dengan script.")
     st.stop()
 
 missing = [c for c in EXPECTED_COLS if c not in raw.columns]
@@ -164,7 +170,8 @@ selected_page = st.sidebar.selectbox(
         "3. Skills Gap",
         "4. Gender Parity",
         "5. Unequal Opportunities",
-        "6. Conclusion"
+        "6. Conclusion",
+        "7. Prediksi Job Offers"
     ]
 )
 
@@ -711,3 +718,65 @@ industri dan pengasahan soft skill.
                                 "Years_to_Promotion"] if c in df]
     st.dataframe(df[summary_cols].describe().T.round(2), **W)
     st.caption("Dashboard dibuat dengan Streamlit + Plotly · Group 2 · SDG 4 & 8")
+    
+elif selected_page == "7. Prediksi Job Offers":
+    st.subheader("7. Prediksi Job Offers (Kuesioner)")
+    st.markdown(
+        "Isi kuesioner berikut berdasarkan profil kamu, lalu klik **Prediksi** "
+        "untuk melihat estimasi jumlah tawaran kerja (Job Offers) yang mungkin kamu dapatkan. "
+        "Model: **Gradient Boosting Regressor**, dilatih dari dataset yang sama dengan dashboard ini."
+    )
+ 
+    try:
+        model, categories, features = load_model()
+    except Exception:
+        st.error(
+            f"❌ File model `{MODEL_PATH}` tidak ditemukan)."
+        )
+        st.stop()
+ 
+    with st.form("questionnaire_job_offers"):
+        col1, col2 = st.columns(2)
+ 
+        with col1:
+            q_age = st.number_input("Age", min_value=17, max_value=60, value=22, step=1)
+            q_gender = st.selectbox("Gender", categories["Gender"])
+            q_university_gpa = st.number_input(
+                "University GPA", min_value=0.0, max_value=4.0, value=3.5, step=0.01, format="%.2f"
+            )
+            q_field_of_study = st.selectbox("Field of Study", categories["Field_of_Study"])
+            q_internships = st.number_input("Internships Completed", min_value=0, max_value=20, value=2, step=1)
+ 
+        with col2:
+            q_projects = st.number_input("Projects Completed", min_value=0, max_value=50, value=5, step=1)
+            q_certifications = st.number_input("Certifications", min_value=0, max_value=20, value=2, step=1)
+            q_soft_skills = st.slider("Soft Skills Score", min_value=0, max_value=10, value=7)
+            q_networking = st.slider("Networking Score", min_value=0, max_value=10, value=6)
+            q_starting_salary = st.number_input(
+                "Starting Salary (ekspektasi)", min_value=0, max_value=1_000_000, value=60000, step=1000
+            )
+ 
+        q_submitted = st.form_submit_button("🔮 Prediksi")
+ 
+    if q_submitted:
+        input_df = pd.DataFrame([{
+            "Age": q_age,
+            "Gender": q_gender,
+            "University_GPA": q_university_gpa,
+            "Field_of_Study": q_field_of_study,
+            "Internships_Completed": q_internships,
+            "Projects_Completed": q_projects,
+            "Certifications": q_certifications,
+            "Soft_Skills_Score": q_soft_skills,
+            "Networking_Score": q_networking,
+            "Starting_Salary": q_starting_salary,
+        }])[features]
+ 
+        prediction = model.predict(input_df)[0]
+        prediction = max(0, round(prediction))
+ 
+        st.success(f"### Estimasi jumlah Job Offers: **{prediction}**")
+        st.caption(
+            "Catatan: hasil ini adalah estimasi statistik dari model machine learning, "
+            "bukan jaminan hasil aktual."
+        )
