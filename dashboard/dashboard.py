@@ -544,13 +544,18 @@ elif selected_page == "3. Skills Gap":
     with c2:
         target = "Career_Success_Score"
         tc = corr_sp[target].drop(target).sort_values(key=abs, ascending=False)
-        bar = pd.DataFrame({"Kategori": tc.index, "Korelasi": tc.values})
-        fig = px.bar(bar, x="Kategori", y="Korelasi", color="Kategori",
+        
+        bar = pd.DataFrame({"Category": tc.index, "Korelasi": tc.values})
+        
+        # 2. Sesuaikan parameter x dan color ke 'Category'
+        fig = px.bar(bar, x="Category", y="Korelasi", color="Category",
                      color_discrete_sequence=["orange", "skyblue"],
                      text=bar["Korelasi"].round(4), height=430)
+        
         fig.update_traces(textposition="outside")
         fig.update_yaxes(range=[max(0, bar["Korelasi"].min() - 0.01), 1.0])
         fig.update_layout(title="Average Impact on Career Success", showlegend=False,
+                          xaxis_title="Category",  # Mengamankan judul x-axis
                           yaxis_title="Average Absolute Correlation",
                           margin=dict(t=55, b=10, l=10, r=10))
         st.plotly_chart(fig, **W)
@@ -746,8 +751,8 @@ and the development of soft skills.
 elif selected_page == "7. Job Offers Predictions":
     st.subheader("7. Job Offer Predictions")
     st.markdown(
-        "Fill out the following questionnaire based on your profile, then click **Prediction**"
-        "to see an estimate of how many job offers you might receive."
+        "Fill out the following questionnaire based on your profile, then click **Predict**"
+        " to see an estimate of how many job offers you might receive."
         "The model was trained on the same dataset as this dashboard."
     )
  
@@ -778,10 +783,10 @@ elif selected_page == "7. Job Offers Predictions":
             q_soft_skills = st.slider("Soft Skills Score", min_value=0, max_value=10, value=7)
             q_networking = st.slider("Networking Score", min_value=0, max_value=10, value=6)
             q_starting_salary = st.number_input(
-                "Starting Salary (ekspektasi)", min_value=0, max_value=1_000_000, value=60000, step=1000
+                "Starting Salary (Expectation)", min_value=0, max_value=1_000_000, value=60000, step=1000
             )
  
-        q_submitted = st.form_submit_button("Prediksi")
+        q_submitted = st.form_submit_button("Predict")
  
     if q_submitted:
         input_df = pd.DataFrame([{
