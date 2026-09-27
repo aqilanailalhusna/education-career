@@ -22,10 +22,11 @@ W = {"width": "stretch"} if _v >= (1, 49) else {"use_container_width": True}
 PALETTE = px.colors.sequential.Viridis
 CORR_SCALE = "RdBu_r"
 
-DEFAULT_PATH = "../dataset/education_career_success_cleaned.csv"
-
 DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(DASHBOARD_DIR)
+
+DEFAULT_PATH = os.path.join(BASE_DIR, "dataset", "education_career_success_cleaned.csv")
+
 MODEL_PATH = os.path.join(BASE_DIR, "model_career_prediction2.pkl")
 
 
