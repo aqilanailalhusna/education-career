@@ -750,15 +750,15 @@ elif selected_page == "7. Prediksi Job Offers":
     st.subheader("7. Prediksi Job Offers (Kuesioner)")
     st.markdown(
         "Isi kuesioner berikut berdasarkan profil kamu, lalu klik **Prediksi** "
-        "untuk melihat estimasi jumlah tawaran kerja (Job Offers) yang mungkin kamu dapatkan. "
-        "Model: **Gradient Boosting Regressor**, dilatih dari dataset yang sama dengan dashboard ini."
+        "untuk melihat estimasi jumlah tawaran kerja yang mungkin kamu dapatkan. "
+        "Model dilatih dari dataset yang sama dengan dashboard ini."
     )
  
     try:
         model, categories, features = load_model()
     except Exception as e:
         st.error(
-            f"❌ **Gagal memuat model:** File model `{MODEL_PATH}` tidak ditemukan "
+            f"**Gagal memuat model:** File model `{MODEL_PATH}` tidak ditemukan "
             f"atau terjadi kesalahan pembacaan.\n\nDetail error: `{e}`"
         )
         st.stop()
