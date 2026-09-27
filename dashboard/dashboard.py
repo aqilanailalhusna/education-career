@@ -206,13 +206,11 @@ selected_page = st.sidebar.selectbox(
         "4. Gender Parity",
         "5. Unequal Opportunities",
         "6. Conclusion",
-        "7. Prediksi Job Offers"
+        "7. Job Offers Predictions"
     ]
 )
 
-st.markdown("---")
-
-st.sidebar.subheader("Filter global")
+st.sidebar.subheader("Global Filter")
 
 genders = sorted(df_all["Gender"].dropna().unique()) if "Gender" in df_all else []
 sel_gender = st.sidebar.multiselect("Gender", genders, default=genders)
@@ -244,7 +242,7 @@ if "Starting_Salary" in df_all:
 df = df_all[mask].copy()
 
 if df.empty:
-    st.error("Tidak ada data yang lolos filter. Longgarkan filter di sidebar.")
+    st.error("No data passed the filter. Loosen the filter in the sidebar.")
     st.stop()
 
 st.title("Factors That Influence Career Success")
@@ -254,28 +252,28 @@ st.markdown("---")
 if selected_page == "Exploratory Data Analysis (EDA)":
     st.subheader("Exploratory Data Analysis (EDA)")
     st.markdown(
-        "Halaman ini menampilkan gambaran pemetaan awal terhadap karakteristik akademik, "
-        "sebaran bidang studi, serta portofolio pengalaman mahasiswa (proyek, magang, sertifikasi)."
+        "This page presents a preliminary overview of academic characteristics, "
+        "the distribution of fields of study, and a portfolio of student experiences such as projects, internships, certifications"
     )
 
     k = st.columns(5)
-    k[0].metric("Jumlah mahasiswa", f"{len(df):,}")
+    k[0].metric("Number Of Students", f"{len(df):,}")
     if "University_GPA" in df:
-        k[1].metric("Rata-rata GPA", f"{df['University_GPA'].mean():.2f}")
+        k[1].metric("Average GPA", f"{df['University_GPA'].mean():.2f}")
     if "Starting_Salary" in df:
-        k[2].metric("Rata-rata gaji awal", f"${df['Starting_Salary'].mean():,.0f}")
+        k[2].metric("Average Starting Salary", f"${df['Starting_Salary'].mean():,.0f}")
     if "Job_Offers" in df:
-        k[3].metric("Rata-rata job offers", f"{df['Job_Offers'].mean():.2f}")
+        k[3].metric("Average Job Offers", f"{df['Job_Offers'].mean():.2f}")
     if "Career_Satisfaction" in df:
-        k[4].metric("Kepuasan karier", f"{df['Career_Satisfaction'].mean():.2f}/10")
+        k[4].metric("Career Satisfaction", f"{df['Career_Satisfaction'].mean():.2f}/10")
 
-    st.markdown("### 1. Profil Academic & IPK Mahasiswa")
+    st.markdown("### 1. Student Academic Profile & GPA")
     e1, e2 = st.columns(2)
     with e1:
         if "University_GPA" in df.columns:
             fig_gpa = px.histogram(
                 df, x="University_GPA", nbins=20, marginal="box",
-                title="Sebaran IPK Mahasiswa (University GPA)",
+                title="Distribution of Student GPAs (University GPA)",
                 color_discrete_sequence=["#2b5c8f"]
             )
             fig_gpa.add_vline(x=df["University_GPA"].mean(), line_dash="dash", line_color="red",
@@ -287,7 +285,7 @@ if selected_page == "Exploratory Data Analysis (EDA)":
             gpa_field = df.groupby("Field_of_Study")["University_GPA"].mean().reset_index()
             fig_gpa_field = px.bar(
                 gpa_field, x="Field_of_Study", y="University_GPA",
-                title="Rata-rata IPK per Bidang Studi",
+                title="Average GPA by Field of Study",
                 color="University_GPA", color_continuous_scale="Blues",
                 text=gpa_field["University_GPA"].round(2)
             )
@@ -295,26 +293,26 @@ if selected_page == "Exploratory Data Analysis (EDA)":
             fig_gpa_field.update_yaxes(range=[0, 4.0])
             st.plotly_chart(fig_gpa_field, **W)
 
-    st.markdown("### 2. Sebaran Bidang Studi (Field of Study)")
+    st.markdown("### 2. Distribution of Fields of Study")
     if "Field_of_Study" in df.columns:
         f_counts = df["Field_of_Study"].value_counts().reset_index()
         f_counts.columns = ["Field_of_Study", "Jumlah Mahasiswa"]
         fig_field = px.pie(
             f_counts, names="Field_of_Study", values="Jumlah Mahasiswa",
-            title="Komposisi Mahasiswa Berdasarkan Field of Study",
+            title="Student Composition by Field of Study",
             hole=0.4, color_discrete_sequence=px.colors.qualitative.Set3
         )
         st.plotly_chart(fig_field, **W)
 
-    st.markdown("### 3. Rentang Pengalaman & Portofolio Mahasiswa")
-    st.markdown("Pemetaan distribusi jumlah **Proyek**, **Magang (Internship)**, dan **Sertifikasi** yang diikuti oleh mahasiswa:")
+    st.markdown("### 3. Range of Student Experience & Portfolios")
+    st.markdown("Mapping the distribution of the number of **Projects**, **Internships**, and **Certifications** completed by students:")
     
     p1, p2, p3 = st.columns(3)
     with p1:
         if "Projects_Completed" in df.columns:
             fig_proj = px.histogram(
                 df, x="Projects_Completed",
-                title="Rentang Proyek Selesai",
+                title="Range of Completed Projects",
                 color_discrete_sequence=["#27ae60"], text_auto=True
             )
             st.plotly_chart(fig_proj, **W)
@@ -322,7 +320,7 @@ if selected_page == "Exploratory Data Analysis (EDA)":
         if "Internships_Completed" in df.columns:
             fig_intern = px.histogram(
                 df, x="Internships_Completed",
-                title="Rentang Magang Selesai",
+                title="Range of Completed Internships",
                 color_discrete_sequence=["#e67e22"], text_auto=True
             )
             st.plotly_chart(fig_intern, **W)
@@ -330,7 +328,7 @@ if selected_page == "Exploratory Data Analysis (EDA)":
         if "Certifications" in df.columns:
             fig_cert = px.histogram(
                 df, x="Certifications",
-                title="Rentang Sertifikasi Selesai",
+                title="Range of Completed Certifications",
                 color_discrete_sequence=["#8e44ad"], text_auto=True
             )
             st.plotly_chart(fig_cert, **W)
@@ -338,7 +336,7 @@ if selected_page == "Exploratory Data Analysis (EDA)":
 elif selected_page == "1. Recruitment Trends":
     st.subheader("1. Shifting Recruitment Trends")
 
-    st.markdown("#### a. Bagaimana pengaruh soft skills dibandingkan GPA terhadap peluang job offer?")
+    st.markdown("#### a. How do soft skills compare to a GPA in terms of their impact on the likelihood of receiving a job offer?")
     c1, c2 = st.columns(2)
     with c1:
         st.plotly_chart(regplot(df, "University_GPA", "Job_Offers", "GPA vs Job Offers"),
@@ -354,21 +352,21 @@ elif selected_page == "1. Recruitment Trends":
     with c3:
         st.plotly_chart(fig, **W)
     with c4:
-        st.markdown("**Nilai korelasi Spearman**")
+        st.markdown("**Spearman's Correlation Coefficient**")
         st.dataframe(m, **W)
 
     narrative(
-        "Kedua scatter menunjukkan tren naik: GPA maupun soft skill sama-sama diikuti "
-        "kenaikan jumlah job offer. Heatmap memperlihatkan korelasi positif sangat kuat "
-        "(±0.95–0.97) di antara ketiganya, artinya kemampuan akademik dan interpersonal "
-        "sama-sama berperan besar pada peluang kerja."
+        "Both scatter plots show an upward trend: both GPA and soft skills are accompanied by "
+        "an increase in the number of job offers. The heat map shows a very strong positive correlation"
+        "(±0.95–0.97) among the three, meaning that both academic and interpersonal skills"
+        "play a major role in employment opportunities."
     )
 
     st.markdown("---")
-    st.markdown("#### b. Apakah individu dengan skill kuat tetapi GPA rendah tetap mendapat job offer?")
-    hi_skill = st.slider("Ambang soft skill 'tinggi' (≥)", 1.0, 10.0,
+    st.markdown("#### b. Do individuals with strong skills but a low GPA still receive job offers?")
+    hi_skill = st.slider("'High' soft skills threshold (≥)", 1.0, 10.0,
                          float(df["Soft_Skills_Score"].quantile(0.75)), 0.5)
-    lo_gpa = st.slider("Ambang GPA 'rendah' (≤)", float(df["University_GPA"].min()),
+    lo_gpa = st.slider("'Low' GPA threshold (≤)", float(df["University_GPA"].min()),
                        float(df["University_GPA"].max()),
                        float(df["University_GPA"].quantile(0.25)), 0.05)
 
@@ -385,26 +383,26 @@ elif selected_page == "1. Recruitment Trends":
 
     seg = df[(df["Soft_Skills_Score"] >= hi_skill) & (df["University_GPA"] <= lo_gpa)]
     m1, m2, m3 = st.columns(3)
-    m1.metric("Jumlah 'skill tinggi, GPA rendah'", len(seg))
-    m2.metric("Rata-rata job offers segmen ini",
+    m1.metric("The number of students with 'high skills but low GPAs' ", len(seg))
+    m2.metric("Average job offers in this segment",
               f"{seg['Job_Offers'].mean():.2f}" if len(seg) else "—")
-    m3.metric("Yang dapat ≥1 offer",
+    m3.metric("Those who received ≥1 offer",
               f"{(seg['Job_Offers'] >= 1).mean() * 100:.0f}%" if len(seg) else "—")
     if len(seg):
         st.dataframe(seg.head(20), **W)
 
     narrative(
-        "Karena GPA dan soft skill sama-sama berkorelasi sangat kuat dengan job offers, "
-        "kuadran 'soft skill tinggi tetapi GPA rendah' nyaris kosong pada dataset ini — "
-        "silakan geser kedua ambang untuk memeriksa sendiri."
+        "Since both GPA and soft skills are strongly correlated with job offers,"
+        "the 'high soft skills but low GPA' quadrant is nearly empty in this dataset — "
+        "feel free to adjust both thresholds to see for yourself."
     )
 
 
 elif selected_page == "2. Career Well-Being":
     st.subheader("2. Demands for Career Well-Being")
 
-    st.markdown("#### a. Bagaimana gaji dan work-life balance bersama-sama memengaruhi kepuasan karier?")
-    w = st.slider("Bobot gaji dalam indeks gabungan", 0.0, 1.0, 0.5, 0.05,
+    st.markdown("#### a. How do salary and work-life balance together influence career satisfaction?")
+    w = st.slider("The weight of wages in the composite index", 0.0, 1.0, 0.5, 0.05,
                   help="Indeks = w × salary_scaled + (1-w) × worklife_scaled. "
                        "Notebook memakai bobot 0.5 (rata-rata sederhana).")
     d = df.copy()
@@ -423,19 +421,19 @@ elif selected_page == "2. Career Well-Being":
         st.plotly_chart(fig, **W)
     with c2:
         fig2, m2_ = corr_heatmap(d, ["salary_worklife_index", "Career_Satisfaction"],
-                                 "spearman", "Korelasi Index vs Satisfaction", height=480)
+                                 "spearman", "Correlation Index vs Satisfaction", height=480)
         st.plotly_chart(fig2, **W)
 
     narrative(
-        "Sebaran sangat bervariasi: pada indeks rendah kepuasan didominasi level sedang, "
-        "sementara skor 9–10 baru muncul konsisten setelah indeks melewati ~0.38. "
-        "Korelasinya hanya lemah–moderat, jadi kombinasi gaji dan WLB bukan satu-satunya "
-        "penentu kepuasan karier."
+        "The distribution varies widely: at low satisfaction indices, moderate levels dominate,"
+        "while scores of 9–10 only appear consistently once the index exceeds ~0.38."
+        "The correlation is only weak to moderate, so the combination of salary and work-life balance is not the sole"
+        "determinant of career satisfaction."
     )
 
     st.markdown("---")
-    st.markdown("#### b. Kepuasan karier: kelompok pengejar gaji vs pengejar work-life balance")
-    q = st.slider("Kuantil pembatas kelompok prioritas", 0.50, 0.95, 0.75, 0.05)
+    st.markdown("#### b. Career satisfaction: the 'salary seekers' vs. the 'work-life balance seekers' ")
+    q = st.slider("Quantiles defining priority groups", 0.50, 0.95, 0.75, 0.05)
     salary_p = df[df["Starting_Salary"] >= df["Starting_Salary"].quantile(q)]
     balance_p = df[df["Work_Life_Balance"] >= df["Work_Life_Balance"].quantile(q)]
 
@@ -486,16 +484,16 @@ elif selected_page == "2. Career Well-Being":
         st.plotly_chart(fig, **W)
 
     narrative(
-        "Kelompok yang gajinya tinggi melaporkan kepuasan karier jauh lebih tinggi "
-        "dibanding kelompok dengan WLB tinggi. Terlihat pula trade-off sistemik: "
-        "gaji tinggi berbanding terbalik dengan skor work-life balance."
+        "The group with high salaries reported significantly higher career satisfaction "
+        "than the group with high work-life balance. A systemic trade-off was also observed:"
+        "high salaries are inversely correlated with work-life balance scores."
     )
 
 
 elif selected_page == "3. Skills Gap":
     st.subheader("3. Skills Gap")
 
-    st.markdown("#### a. Dampak magang dan proyek terhadap job offers")
+    st.markdown("#### a.  The Impact of Internships and Projects on Job Offers")
     fig, cm = corr_heatmap(df, ["Internships_Completed", "Projects_Completed", "Job_Offers"],
                            "pearson", "Matrix Correlation", height=380)
     c1, c2 = st.columns([1, 1.1])
@@ -503,7 +501,7 @@ elif selected_page == "3. Skills Gap":
         st.plotly_chart(fig, **W)
     with c2:
         st.dataframe(cm, **W)
-        st.caption("Korelasi mendekati sempurna: portofolio praktik sangat menentukan rekrutmen.")
+        st.caption("The correlation is nearly perfect: a portfolio of practical work is a key factor in the hiring process.")
 
     c3, c4 = st.columns(2)
     with c3:
@@ -530,13 +528,13 @@ elif selected_page == "3. Skills Gap":
     st.plotly_chart(fig, **W)
 
     narrative(
-        "Ada ambang minimum: kandidat tanpa magang atau dengan proyek sangat sedikit "
-        "hampir tidak menerima tawaran. Kombinasi magang banyak + proyek banyak "
-        "menghasilkan jumlah tawaran tertinggi (efek pengganda)."
+        "There is a minimum threshold: candidates with no internships or very few projects"
+        "hardly ever receive job offers. A combination of many internships + many projects"
+        "results in the highest number of job offers (multiplier effect)."
     )
 
     st.markdown("---")
-    st.markdown("#### b. Seberapa besar dampak soft skill & sertifikasi dibanding pendidikan formal?")
+    st.markdown("#### b. How significant is the impact of soft skills and certifications compared to formal education?")
     agg_cols = ["Education", "Soft Skills + Certifications", "Career_Success_Score"]
     fig, corr_sp = corr_heatmap(df, agg_cols, "spearman",
                                 "Correlation Heatmap (Aggregated Columns)", fmt=".4f", height=430)
@@ -557,28 +555,28 @@ elif selected_page == "3. Skills Gap":
                           margin=dict(t=55, b=10, l=10, r=10))
         st.plotly_chart(fig, **W)
 
-    st.caption("Catatan: `Education` = rata-rata High_School_GPA, SAT_Score, University_GPA. "
-               "`Career_Success_Score` = rata-rata Starting_Salary, Job_Offers, Career_Satisfaction.")
+    st.caption("Note: `Education` = the average of High_School_GPA, SAT_Score, and University_GPA. "
+               "`Career_Success_Score` = the average of Starting_Salary, Job_Offers, and Career_Satisfaction.")
 
     narrative(
-        "Keduanya berpengaruh sangat kuat, tetapi Soft Skills + Certifications sedikit "
-        "unggul dibanding Education — sejalan dengan tren skills-based hiring. Keduanya "
-        "juga saling berkorelasi tinggi, menandakan mahasiswa berprestasi akademik "
-        "cenderung juga mengumpulkan sertifikasi."
+        "Both have a very strong influence, but Soft Skills + Certifications are slightly"
+        "more important than Education—in line with the trend toward skills-based hiring. The two are"
+        "also highly correlated, indicating that students with strong academic performance"
+        "tend to earn certifications as well.."
     )
 
 
 elif selected_page == "4. Gender Parity":
     st.subheader("4. Gender Parity in Professional Outcomes")
 
-    st.markdown("#### a. Perbedaan gaji awal & waktu promosi antar gender pada bidang studi yang sama")
+    st.markdown("#### a. Differences in Starting Salaries and Promotion Timelines by Gender in the Same Field of Study")
     avail = sorted(df["Field_of_Study"].dropna().unique())
     default_fields = [f for f in ["Engineering", "Business"] if f in avail] or avail[:2]
-    pick_fields = st.multiselect("Bidang studi yang dibandingkan", avail, default=default_fields)
+    pick_fields = st.multiselect("Fields of study compared", avail, default=default_fields)
     dff = df[df["Field_of_Study"].isin(pick_fields)]
 
     if dff.empty:
-        st.info("Pilih minimal satu bidang studi.")
+        st.info("Select at least one field of study.")
     else:
         c1, c2 = st.columns(2)
         with c1:
@@ -610,13 +608,13 @@ elif selected_page == "4. Gender Parity":
         st.dataframe(summary, **W)
 
     narrative(
-        "Pada dataset ini perempuan unggul di kedua bidang, baik dari sisi gaji awal "
-        "maupun kecepatan promosi, dengan selisih paling mencolok di bidang Business."
+        "In this dataset, women outperform men in both areas—in terms of both starting salary "
+        "and promotion speed—with the most striking difference in the Business field."
     )
 
     st.markdown("---")
-    st.markdown("#### b. Pengaruh gender terhadap jumlah job offer pada kelompok GPA setara")
-    edges = st.slider("Batas kelompok GPA", 2.0, 4.0, (3.3, 3.6), 0.1)
+    st.markdown("#### b. The Effect of Gender on the Number of Job Offers Among Groups with Equivalent GPAs")
+    edges = st.slider("GPA Group Thresholds", 2.0, 4.0, (3.3, 3.6), 0.1)
     lo_e, hi_e = edges
     bins = [0, lo_e, hi_e, 4.0]
     labels = [f"GPA ≤ {lo_e:.1f}", f"GPA {lo_e:.1f} – {hi_e:.1f}", f"GPA > {hi_e:.1f}"]
@@ -635,46 +633,46 @@ elif selected_page == "4. Gender Parity":
     st.plotly_chart(fig, **W)
 
     narrative(
-        "GPA lebih tinggi selalu berarti lebih banyak tawaran kerja untuk semua gender. "
-        "Pada kelompok GPA bawah–menengah perempuan cenderung unggul, sedangkan pada "
-        "kelompok GPA tertinggi selisihnya nyaris hilang."
+        "A higher GPA always means more job offers for all genders."
+        "In the lower-to-middle GPA group, women tend to outperform men, whereas in the"
+        "highest GPA group, the gap virtually disappears."
     )
 
 
 elif selected_page == "5. Unequal Opportunities":
     st.subheader("5. Unequal Early-Career Opportunities Among Graduates")
 
-    st.markdown("#### a. GPA setara, pengalaman praktik berbeda — hasil kariernya berbeda?")
-    color_by = st.selectbox("Warnai titik berdasarkan",
+    st.markdown("#### a. Same GPA, different work experience, different career outcomes?")
+    color_by = st.selectbox("Color the dots based on",
                             [c for c in ["Projects_Completed", "Certifications",
                                          "Internships_Completed", "Networking_Score"] if c in df])
     fig = px.scatter(df, x="University_GPA", y="Starting_Salary", color=color_by,
                      color_continuous_scale="Viridis", opacity=0.8, height=520,
                      hover_data=[c for c in ["Field_of_Study", "Gender", "Job_Offers"] if c in df])
-    fig.update_layout(title=f"GPA vs Starting Salary berdasarkan {color_by}",
+    fig.update_layout(title=f"GPA vs Starting Salary based on {color_by}",
                       xaxis_title="University GPA", yaxis_title="Starting Salary ($)",
                       margin=dict(t=55, b=10, l=10, r=10))
     st.plotly_chart(fig, **W)
 
-    gpa_pick = st.slider("Periksa sebaran gaji pada GPA tertentu (±0.05)",
+    gpa_pick = st.slider("Examine the distribution of salaries at a specific GPA (±0.05)",
                          float(df["University_GPA"].min()), float(df["University_GPA"].max()),
                          float(round(df["University_GPA"].median(), 1)), 0.05)
     same = df[df["University_GPA"].between(gpa_pick - 0.05, gpa_pick + 0.05)]
     if len(same) > 1:
         c1, c2, c3 = st.columns(3)
-        c1.metric("Mahasiswa dengan GPA ini", len(same))
-        c2.metric("Rentang gaji",
+        c1.metric("Students with this GPA", len(same))
+        c2.metric("Salary range",
                   f"${same['Starting_Salary'].max() - same['Starting_Salary'].min():,.0f}")
-        c3.metric("Rata-rata gaji", f"${same['Starting_Salary'].mean():,.0f}")
+        c3.metric("Average salary", f"${same['Starting_Salary'].mean():,.0f}")
 
     narrative(
-        "Prestasi akademik yang sama tidak menjamin hasil karier yang sama: pada GPA "
-        "identik, selisih gaji awal bisa sangat lebar. Pembedanya adalah portofolio "
-        "praktik dan sertifikasi profesional."
+        "Identical academic achievements do not guarantee identical career outcomes: even with"
+        "identical GPAs, the difference in starting salaries can be significant. What sets them apart is a portfolio of"
+        "practical experience and professional certifications."
     )
 
     st.markdown("---")
-    st.markdown("#### b. Apakah bidang studi tertentu memberi hasil karier jauh lebih tinggi?")
+    st.markdown("#### b. Do certain fields of study lead to significantly better career outcomes?")
     fig = px.scatter(df, x="University_GPA", y="Starting_Salary", color="Field_of_Study",
                      opacity=0.75, height=540,
                      hover_data=[c for c in ["Gender", "Job_Offers", "Certifications"] if c in df])
@@ -687,7 +685,7 @@ elif selected_page == "5. Unequal Opportunities":
     with c1:
         fig = px.box(df, x="Field_of_Study", y="Starting_Salary", color="Field_of_Study",
                      points="outliers", height=470)
-        fig.update_layout(title="Sebaran gaji awal per bidang studi", showlegend=False,
+        fig.update_layout(title="Distribution of Starting Salaries by Field of Study", showlegend=False,
                           xaxis_title="", margin=dict(t=55, b=10, l=10, r=10))
         st.plotly_chart(fig, **W)
     with c2:
@@ -697,7 +695,7 @@ elif selected_page == "5. Unequal Opportunities":
                      Rata_Kepuasan=("Career_Satisfaction", "mean"),
                      Jumlah=("Starting_Salary", "size"))
                 .round(2).sort_values("Rata_Gaji", ascending=False))
-        st.markdown("**Peringkat bidang studi**")
+        st.markdown("**Rankings by Field of Study**")
         st.dataframe(rank, **W, height=430)
 
     fig, _ = corr_heatmap(df, ["University_GPA", "Projects_Completed", "Certifications",
@@ -707,9 +705,9 @@ elif selected_page == "5. Unequal Opportunities":
     st.plotly_chart(fig, **W)
 
     narrative(
-        "GPA tinggi bukan satu-satunya penentu keberhasilan finansial. Sebaran vertikal "
-        "titik menunjukkan perbedaan gaji besar pada GPA yang sama, dan bidang studi "
-        "teknis seperti Computer Science cenderung mendapat imbalan finansial lebih tinggi."
+        "A high GPA is not the only determinant of financial success. The vertical spread of "
+        "data points indicates significant differences in salary even among those with the same GPA, and"
+        "technical fields such as computer science tend to offer higher financial rewards."
     )
 
 
@@ -717,41 +715,40 @@ elif selected_page == "6. Conclusion":
     st.subheader("E. Conclusion")
     st.markdown(
         """
-Kesuksesan karier awal tidak lagi ditentukan semata oleh capaian akademik, melainkan
-oleh kombinasi prestasi akademik, pengalaman praktik, soft skill, serta faktor eksternal
-seperti gender dan bidang studi.
+Early career success is no longer determined solely by academic achievements, but rather
+by a combination of academic achievements, practical experience, soft skills, and external factors
+such as gender and field of study.
 
-- **Pengalaman praktik menentukan.** Proyek, magang, dan sertifikasi berkorelasi hampir
-  sempurna dengan jumlah tawaran kerja — lebih menentukan daripada nilai semata.
-- **GPA sama, hasil berbeda.** Pada GPA identik, gaji awal bisa berbeda sangat jauh,
-  menandakan ketimpangan peluang yang digerakkan oleh portofolio praktik.
-- **Bidang studi menciptakan ketimpangan struktural.** Jurusan teknis bergaji tinggi
-  memberi lebih banyak kesempatan membangun portofolio yang bernilai di pasar kerja.
-- **Ada trade-off gaji vs work-life balance.** Kelompok yang memprioritaskan gaji
-  melaporkan kepuasan karier jauh lebih tinggi dibanding kelompok WLB.
-- **Kesetaraan gender membaik.** Pada bidang Business dan Engineering, lulusan perempuan
-  memperoleh gaji awal lebih tinggi dan promosi lebih cepat.
+- **Practical experience is key.** Projects, internships, and certifications correlate almost
+  perfectly with the number of job offers, they are more decisive than grades alone.
+- **Same GPA, different outcomes.** With identical GPAs, starting salaries can vary widely,
+  indicating an inequality of opportunity driven by practical portfolios.
+- **Fields of study create structural inequality.** High-paying technical majors
+  provide more opportunities to build portfolios that hold value in the job market.
+- **There’s a trade-off between salary and work-life balance.** Groups that prioritize salary
+  report significantly higher career satisfaction than those prioritizing work-life balance (WLB).
+- **Gender equality is improving.** In Business and Engineering, female graduates
+  earn higher starting salaries and receive promotions faster.
 
-**Implikasi:** perguruan tinggi perlu bergerak ke pembelajaran berbasis proyek dan jalur
-sertifikasi, sementara mahasiswa perlu memadukan capaian akademik dengan pengalaman
-industri dan pengasahan soft skill.
+**Implications:** Universities need to shift toward project-based learning and certification
+pathways, while students need to combine academic achievements with industry experience
+and the development of soft skills.
         """
     )
     st.markdown("---")
-    st.markdown("**Ringkasan angka pada data yang sedang difilter**")
+    st.markdown("**Summary of figures for the currently filtered data**")
     summary_cols = [c for c in ["University_GPA", "Soft_Skills_Score", "Internships_Completed",
                                 "Projects_Completed", "Certifications", "Job_Offers",
                                 "Starting_Salary", "Career_Satisfaction", "Work_Life_Balance",
                                 "Years_to_Promotion"] if c in df]
     st.dataframe(df[summary_cols].describe().T.round(2), **W)
-    st.caption("Dashboard dibuat dengan Streamlit + Plotly · Group 2 · SDG 4 & 8")
     
-elif selected_page == "7. Prediksi Job Offers":
-    st.subheader("7. Prediksi Job Offers (Kuesioner)")
+elif selected_page == "7. Job Offers Predictions":
+    st.subheader("7. Job Offer Predictions")
     st.markdown(
-        "Isi kuesioner berikut berdasarkan profil kamu, lalu klik **Prediksi** "
-        "untuk melihat estimasi jumlah tawaran kerja yang mungkin kamu dapatkan. "
-        "Model dilatih dari dataset yang sama dengan dashboard ini."
+        "Fill out the following questionnaire based on your profile, then click **Prediction**"
+        "to see an estimate of how many job offers you might receive."
+        "The model was trained on the same dataset as this dashboard."
     )
  
     try:
@@ -803,8 +800,8 @@ elif selected_page == "7. Prediksi Job Offers":
         prediction = model.predict(input_df)[0]
         prediction = max(0, round(prediction))
  
-        st.success(f"### Estimasi jumlah Job Offers: **{prediction}**")
+        st.success(f"### Estimated Number of Job Offers: **{prediction}**")
         st.caption(
-            "Catatan: hasil ini adalah estimasi statistik dari model machine learning, "
-            "bukan jaminan hasil aktual."
+            "Note: These results are statistical estimates from a machine learning model, "
+            "not a guarantee of actual results."
         )
