@@ -3,6 +3,7 @@
 Dashboard interaktif berbasis **Streamlit + Plotly** untuk menganalisis faktor-faktor yang memengaruhi kesuksesan karier awal lulusan, dilengkapi **kuesioner prediksi jumlah Job Offers** menggunakan model machine learning.
 
 > Mendukung **SDG 4 (Quality Education)** dan **SDG 8 (Decent Work and Economic Growth)**
+> Live demo: http://joboffer-prediction.streamlit.app/
 
 ---
 
